@@ -8,7 +8,8 @@ from solana.publickey import PublicKey
 from solana.account import Account as SolanaAccount
 from typing import Optional, List
 
-SOLANA_URL = os.environ.get("SOLANA_URL", "http://localhost:8899")
+from .common_neon.environment_data import SOLANA_URL
+
 PP_SOLANA_URL = os.environ.get("PP_SOLANA_URL", SOLANA_URL)
 EVM_LOADER_ID = os.environ.get("EVM_LOADER")
 neon_cli_timeout = float(os.environ.get("NEON_CLI_TIMEOUT", "0.5"))
