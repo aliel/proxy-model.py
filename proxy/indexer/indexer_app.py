@@ -1,7 +1,6 @@
 from logged_groups import logged_group
 
-from ..environment import GATHER_STATISTICS
-from ..common_neon.environment_data import SOLANA_URL, EVM_LOADER_ID
+from ..common_neon.environment_data import SOLANA_URL, EVM_LOADER_ID, GATHER_STATISTICS
 from ..statistics_exporter.prometheus_indexer_exporter import IndexerStatistics
 from ..common_neon.data import NeonTxStatData
 from .indexer import Indexer
