@@ -10,7 +10,8 @@ from eth_utils import big_endian_to_int
 from proxy.indexer.utils import SolanaIxSignInfo
 
 #TODO: move it out from here
-from ...environment import EVM_LOADER_ID, LOG_FULL_OBJECT_INFO
+from ...environment import LOG_FULL_OBJECT_INFO
+from ..environment_data import EVM_LOADER_ID
 
 from ..eth_proto import Trx as EthTx
 

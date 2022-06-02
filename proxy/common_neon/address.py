@@ -36,7 +36,7 @@ class EthereumAddress:
 
 
 def accountWithSeed(base: bytes, seed: bytes) -> PublicKey:
-    from ..environment import EVM_LOADER_ID
+    from .environment_data import EVM_LOADER_ID
 
     result = PublicKey(sha256(bytes(base) + bytes(seed) + bytes(PublicKey(EVM_LOADER_ID))).digest())
     return result
@@ -44,7 +44,7 @@ def accountWithSeed(base: bytes, seed: bytes) -> PublicKey:
 
 def ether2program(ether):
     from .constants import ACCOUNT_SEED_VERSION
-    from ..environment import EVM_LOADER_ID
+    from ..environment_data import EVM_LOADER_ID
 
     if isinstance(ether, str):
         pass

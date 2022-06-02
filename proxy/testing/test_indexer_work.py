@@ -28,7 +28,7 @@ from web3 import Web3
 from web3.auto.gethdev import w3
 
 from proxy.common_neon.constants import SYSVAR_INSTRUCTION_PUBKEY
-from proxy.environment import EVM_LOADER_ID
+from proxy.common_neon.environment_data import EVM_LOADER_ID
 from proxy.common_neon.address import EthereumAddress
 from proxy.common_neon.compute_budget import TransactionWithComputeBudget
 from proxy.common_neon.neon_instruction import NeonInstruction

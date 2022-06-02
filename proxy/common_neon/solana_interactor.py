@@ -21,7 +21,7 @@ from typing import Dict, Union, Any, List, NamedTuple, cast
 from base58 import b58decode, b58encode
 
 from .utils import SolanaBlockInfo
-from ..environment import EVM_LOADER_ID, CONFIRMATION_CHECK_DELAY
+from .environment_data import EVM_LOADER_ID, CONFIRMATION_CHECK_DELAY
 from ..environment import FUZZING_BLOCKHASH, CONFIRM_TIMEOUT, FINALIZED
 from ..environment import RETRY_ON_FAIL
 
