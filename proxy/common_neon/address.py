@@ -44,7 +44,7 @@ def accountWithSeed(base: bytes, seed: bytes) -> PublicKey:
 
 def ether2program(ether):
     from .constants import ACCOUNT_SEED_VERSION
-    from ..environment_data import EVM_LOADER_ID
+    from ..common_neon.environment_data import EVM_LOADER_ID
 
     if isinstance(ether, str):
         pass
