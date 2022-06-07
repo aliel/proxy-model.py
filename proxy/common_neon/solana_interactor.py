@@ -376,7 +376,7 @@ class SolanaInteractor:
         if isinstance(eth_account, str):
             eth_account = EthereumAddress(eth_account)
         account_sol, nonce = ether2program(eth_account)
-        info = self.get_account_info(account_sol)
+        info = self.get_account_info(account_sol, commitment="processed")
         if info is None:
             return None
         elif info.tag != NEON_ACCOUNT_TAG:

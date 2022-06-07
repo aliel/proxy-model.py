@@ -1,7 +1,6 @@
 import asyncio
 from typing import List, Set, Tuple, Dict
 from logged_groups import logged_group
-import bisect
 
 from .mempool_api import MPRequest, MPResultCode, MPTxResult, MPTxRequest, IMPExecutor, \
                          MPRequestType, MPTxRequest, MPPendingTxCountReq
