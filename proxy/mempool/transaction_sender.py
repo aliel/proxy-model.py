@@ -5,7 +5,7 @@ import math
 import time
 
 from logged_groups import logged_group
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 from solana.transaction import AccountMeta, Transaction, PublicKey
 from solana.blockhash import Blockhash
@@ -15,7 +15,7 @@ from ..mempool.neon_tx_stages import NeonCreateAccountTxStage, NeonCreateERC20Tx
 
 from ..common_neon.compute_budget import TransactionWithComputeBudget
 from ..common_neon.neon_instruction import NeonInstruction as NeonIxBuilder
-from ..common_neon.solana_interactor import SolanaInteractor
+from ..common_neon.solana_interactor import SolanaInteractor, AccountInfo
 from ..common_neon.solana_tx_list_sender import BlockedAccountsError, SolTxListSender
 from ..common_neon.solana_receipt_parser import SolTxError, SolReceiptParser
 from ..common_neon.eth_proto import Trx as EthTx
@@ -204,6 +204,18 @@ class NeonTxSender:
         if not skip_create_accounts:
             self._create_account_list.clear()
             self.create_account_tx.instructions.clear()
+
+    def get_account_info_list(self, accounts: [PublicKey], length=256, commitment='confirmed') -> List[AccountInfo]:
+        return self.solana.get_account_info_list(accounts, length, commitment)
+
+    def get_multiple_rent_exempt_balances_for_size(self, size_list: [int], commitment='confirmed') -> List[int]:
+        return self.solana.get_multiple_rent_exempt_balances_for_size(size_list, commitment)
+
+    def get_sol_balance(self, account, commitment='confirmed') -> int:
+        return self.solana.get_sol_balance(account, commitment)
+
+    def get_account_info(self, pubkey: PublicKey, length=256, commitment='confirmed') -> Optional[AccountInfo]:
+        return self.solana.get_account_info(pubkey, length, commitment)
 
 
 @logged_group("neon.MemPool")
