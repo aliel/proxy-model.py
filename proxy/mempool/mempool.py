@@ -12,10 +12,10 @@ from .mempool_schedule import MPTxSchedule
 class MemPool:
 
     CHECK_TASK_TIMEOUT_SEC = 0.01
-    MP_CAPACITY = 4096
     RESCHEDULE_TIMEOUT_SEC = 0.4
 
-    def __init__(self, executor: IMPExecutor, capacity: int = MP_CAPACITY):
+    def __init__(self, executor: IMPExecutor, capacity: int):
+        self.info(f"Init mempool schedule with capacity: {capacity}")
         self._tx_schedule = MPTxSchedule(capacity)
         self._schedule_cond = asyncio.Condition()
         self._processing_tasks: List[Tuple[int, asyncio.Task, MPRequest]] = []
@@ -119,17 +119,18 @@ class MemPool:
 
     def _on_request_done(self, tx_request: MPTxRequest):
         sender = tx_request.sender_address
-        self._tx_schedule.done(sender, tx_request.nonce)
+        self._tx_schedule.on_request_done(sender, tx_request.nonce)
 
         count = self.get_pending_trx_count(sender)
         log_ctx = {"context": {"req_id": tx_request.req_id}}
         self.debug(f"Reqeust done, pending tx count: {count}", extra=log_ctx)
 
     def _drop_request_away(self, tx_request: MPTxRequest):
-        self._tx_schedule.drop_request_away(tx_request)
+        if not self._tx_schedule.drop_request_away(tx_request):
+            return
         count = self.get_pending_trx_count(tx_request.sender_address)
         log_ctx = {"context": {"req_id": tx_request.req_id}}
-        self.debug(f"Reqeust: {tx_request.log_str} dropped away, pending tx count: {count}", extra=log_ctx)
+        self.debug(f"Reqeust: {tx_request.log_str} - dropped away, pending tx count: {count}", extra=log_ctx)
 
     async def _kick_tx_schedule(self):
         async with self._schedule_cond:
