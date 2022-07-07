@@ -17,6 +17,10 @@ class IConfig(ABC):
     def get_mempool_capacity(self) -> int:
         """Gets the capacity of the MemPool schedule to constrain the transactions count in there"""
 
+    @abstractmethod
+    def get_operator_resource_count(self) -> int:
+        """Gets the permanent accounts number per solana key that will be used to sign solana transactions"""
+
 
 class Config(IConfig):
 
@@ -29,6 +33,10 @@ class Config(IConfig):
     def get_mempool_capacity(self) -> int:
         return int(os.environ.get("MEMPOOL_CAPACITY", 4096))
 
+    @abstractmethod
+    def get_operator_resource_count(self) -> int:
+        return int(os.environ.get("PERM_ACCOUNT_LIMIT", 2))
+
     def __str__(self):
         return f"SOLANA_URL: {self.get_solana_url()}, EVM_STEP_LIMIT: {self.get_evm_steps_limit()}, " \
-               f"MP_CAPACITY: {self.get_mempool_capacity()}"
+               f"MP_CAPACITY: {self.get_mempool_capacity()}, PERM_ACCOUNT_LIMIT: {self.get_operator_resource_count()}"
