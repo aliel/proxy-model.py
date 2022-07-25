@@ -185,11 +185,11 @@ class SolTxListSender:
         confirmed_list = self._solana.get_multiple_receipts(sig_list)
         # Mix errors with receipts for good transactions
         receipt_list = []
-        for s in send_result_list:
-            if s.error:
-                receipt_list.append(s.error)
+        for send_result, confirmed in zip(send_result_list, confirmed_list):
+            if confirmed is None:
+                receipt_list.append(send_result.error)
             else:
-                receipt_list.append(confirmed_list.pop(0))
+                receipt_list.append(confirmed)
 
         return receipt_list
 
