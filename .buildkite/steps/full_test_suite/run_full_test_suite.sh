@@ -20,7 +20,7 @@ echo "Full test suite image: ${FTS_IMAGE}"
 
 
 # Start tests
-echo Full test suite container name - ${FTS_CONTAINER_NAME}
+echo Full test suite container name : ${FTS_CONTAINER_NAME}
 docker-compose -f docker-compose/docker-compose-full-test-suite.yml pull
 handle_error "Failed to pull full test suite docker image"
 docker-compose -f docker-compose/docker-compose-full-test-suite.yml up
