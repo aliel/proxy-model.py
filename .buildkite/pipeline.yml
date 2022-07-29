@@ -69,7 +69,7 @@ steps:
       queue: "testing"
     if: *is_fts_enabled
     command:
-      - ".buildkite/steps/full_test_suite/terraform-destroy.sh"
+      - echo "Infrastructure destroy in Canceled" 
     depends_on:
       - "full_test_suite"
       - "create_infrastructure"
