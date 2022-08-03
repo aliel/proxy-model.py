@@ -10,7 +10,6 @@ SOLANA_ADDR=`buildkite-agent meta-data get 'SOLANA_IP'`
 export PROXY_URL="http://${PROXY_ADDR}:9090/solana"
 export FAUCET_URL="http://${PROXY_ADDR}:3333/request_neon"
 export SOLANA_URL="http://${SOLANA_ADDR}:8899"
-export FTS_IMAGE="neonlabsorg/full_test_suite:debug"
 
 # Check variables
 echo "External URL for proxy service: ${PROXY_URL}"
