@@ -649,6 +649,7 @@ class NeonTxSendStrategyExecutor:
 
                     if strategy.prep_after_emulate():
                         continue
+                    self.debug(f'Used accounts {len(self._ctx.builder._neon_account_list)+6}')
                     return strategy.execute()
                 raise RuntimeError('fail to sync the emulation and the execution')
 
