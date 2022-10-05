@@ -95,17 +95,11 @@ function run_uniswap_test {
 export -f run_uniswap_test
 
 function run_test {
-    declare TESTNAME="${1}"
-    if [ "${TESTNAME}" == "${UNISWAP_TESTNAME}" ]; then
-        run_uniswap_test
-    else
-        docker exec \
-            -e SKIP_PREPARE_DEPLOY_TEST=YES \
-            -e TESTNAME=${TESTNAME} \
-            proxy \
-            ./proxy/deploy-test.sh \
-            ${EXTRA_ARGS:-} 2>&1
-    fi
+    docker exec \
+        -e SKIP_PREPARE_DEPLOY_TEST=YES \
+        proxy \
+        ./proxy/deploy-test.sh \
+        ${EXTRA_ARGS:-} 2>&1
 }
 export -f run_test
 
@@ -121,7 +115,7 @@ echo "Run tests in parallel. "
 docker cp proxy:/usr/bin/parallel ./parallel
 docker exec proxy ./proxy/prepare-deploy-test.sh ${EXTRA_ARGS:-}
 if [[ -z "${UNITTEST_TESTNAME:=}" ]]; then
-    get_test_list | ./parallel --halt now,fail=1 run_test {}
+    run_test
 else
     run_test "test_${UNITTEST_TESTNAME}.py"
 fi
