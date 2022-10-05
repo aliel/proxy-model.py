@@ -1,6 +1,9 @@
 name: Build proxy docker image
 on:
   workflow_dispatch:
+    inputs:
+      full_test_suite:
+        required: true
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -9,4 +12,4 @@ jobs:
         with:
           submodules: "true"
       - name: TEST
-        run: echo "test"
+        run: echo ${{ github.event.inputs.full_test_suite }}
