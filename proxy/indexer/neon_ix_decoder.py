@@ -1,7 +1,7 @@
 from logged_groups import logged_group
 from typing import Any, List, Type, Optional, Iterator
 
-from ..common_neon.evm_log_decoder import decode_neon_tx_result, decode_neon_tx_sig
+from ..common_neon.evm_log_decoder import decode_neon_tx_result, decode_neon_tx_sig, decode_cancel_gas
 from ..common_neon.utils import NeonTxInfo
 
 from ..indexer.indexed_objects import NeonIndexedTxInfo, NeonIndexedHolderInfo, NeonAccountInfo, SolNeonTxDecoderState
@@ -23,7 +23,7 @@ class DummyIxDecoder:
 
     def __str__(self):
         if self._is_deprecated:
-            return f'DEPRECATED 0x{self._ix_code:02x}:{self._name}:) {self.state.sol_neon_ix}'
+            return f'DEPRECATED 0x{self._ix_code:02x}:{self._name} {self.state.sol_neon_ix}'
         return f'0x{self._ix_code:02x}:{self._name} {self.state.sol_neon_ix}'
 
     def execute(self) -> bool:
@@ -48,13 +48,13 @@ class DummyIxDecoder:
         """
         Assembling of the object has been successfully finished.
         """
-        self.debug(f'decoding done: {msg} - {indexed_obj}')
         ix = self.state.sol_neon_ix
         block = self.state.neon_block
         if isinstance(indexed_obj, NeonIndexedTxInfo):
             block.done_neon_tx(indexed_obj, ix)
         elif isinstance(indexed_obj, NeonIndexedHolderInfo):
-            block.done_neon_holder(indexed_obj, ix)
+            block.done_neon_holder(indexed_obj)
+        self.debug(f'decoding done: {msg} - {indexed_obj}')
         return True
 
     def _decoding_skip(self, reason: str) -> bool:
@@ -70,18 +70,16 @@ class DummyIxDecoder:
 
         Show errors in warning mode because it can be a result of restarting.
         """
-        self.warning(f'decoding fail: {reason} - {indexed_obj}')
-
-        ix = self.state.sol_neon_ix
         block = self.state.neon_block
         if isinstance(indexed_obj, NeonIndexedTxInfo):
-            block.fail_neon_tx(indexed_obj, ix)
+            block.fail_neon_tx(indexed_obj)
         elif isinstance(indexed_obj, NeonIndexedHolderInfo):
-            block.fail_neon_holder(indexed_obj, ix)
+            block.fail_neon_holder(indexed_obj)
+        self.warning(f'decoding fail: {reason} - {indexed_obj}')
         return False
 
     def _decode_neon_tx_from_holder(self, tx: NeonIndexedTxInfo, holder: NeonIndexedHolderInfo) -> None:
-        neon_tx = NeonTxInfo(rlp_sig_data=holder.data)
+        neon_tx = NeonTxInfo.from_sig_data(holder.data)
         if not neon_tx.is_valid():
             self.warning(f'Neon tx rlp error: {neon_tx.error}')
         elif neon_tx.sig != tx.neon_tx.sig:
@@ -110,46 +108,25 @@ class DummyIxDecoder:
         return self._decoding_success(tx, msg)
 
 
-class CreateAccount2IxDecoder(DummyIxDecoder):
-    _name = 'CreateAccount2'
-    _ix_code = 0x18
+class CreateAccount3IxDecoder(DummyIxDecoder):
+    _name = 'CreateAccount3'
+    _ix_code = 0x28
     _is_deprecated = False
 
     def execute(self) -> bool:
         ix = self.state.sol_neon_ix
-        if len(ix.ix_data) < 21:
+        if len(ix.ix_data) < 20:
             return self._decoding_skip(f'not enough data to get Neon account {len(ix.ix_data)}')
 
         neon_account = "0x" + ix.ix_data[1:][:20].hex()
         pda_account = ix.get_account(2)
-        code_account = ix.get_account(3)
-        if code_account == '':
-            code_account = None
 
         account_info = NeonAccountInfo(
-            neon_account, pda_account, code_account,
+            neon_account, pda_account,
             ix.block_slot, None, ix.sol_sig
         )
         self.state.neon_block.add_neon_account(account_info, ix)
         return self._decoding_success(account_info, 'create Neon account')
-
-
-class ResizeStorageAccountIxDecoder(DummyIxDecoder):
-    _name = 'ResizeStorageAccount'
-    _ix_code = 0x11
-    _is_deprecated = False
-
-    def execute(self) -> bool:
-        ix = self.state.sol_neon_ix
-        pda_account = ix.get_account(0)
-        code_account = ix.get_account(2)
-
-        account_info = NeonAccountInfo(
-            None, pda_account, code_account,
-            ix.block_slot, None, ix.sol_sig
-        )
-        self.state.neon_block.add_neon_account(account_info, ix)
-        return self._decoding_success(account_info, 'resize Neon account')
 
 
 class TxExecFromDataIxDecoder(DummyIxDecoder):
@@ -166,7 +143,7 @@ class TxExecFromDataIxDecoder(DummyIxDecoder):
         # 4 bytes - treasury index
 
         rlp_sig_data = ix.ix_data[5:]
-        neon_tx = NeonTxInfo(rlp_sig_data=rlp_sig_data)
+        neon_tx = NeonTxInfo.from_sig_data(rlp_sig_data)
         if neon_tx.error:
             return self._decoding_skip(f'Neon tx rlp error "{neon_tx.error}"')
 
@@ -210,7 +187,7 @@ class BaseTxStepIxDecoder(DummyIxDecoder):
 
         key = NeonIndexedTxInfo.Key.from_neon_tx_sig(neon_tx_sig, storage_account, iter_blocked_account)
         block = self.state.neon_block
-        return block.find_neon_tx(key, ix) or block.add_neon_tx(key, NeonTxInfo(neon_tx_sig=neon_tx_sig), ix)
+        return block.find_neon_tx(key, ix) or block.add_neon_tx(key, NeonTxInfo.from_neon_sig(neon_tx_sig), ix)
 
 
 class TxStepFromDataIxDecoder(BaseTxStepIxDecoder):
@@ -234,7 +211,7 @@ class TxStepFromDataIxDecoder(BaseTxStepIxDecoder):
 
         if not tx.neon_tx.is_valid():
             rlp_sig_data = ix.ix_data[13:]
-            neon_tx = NeonTxInfo(rlp_sig_data=rlp_sig_data)
+            neon_tx = NeonTxInfo.from_sig_data(rlp_sig_data)
             if neon_tx.error:
                 return self._decoding_skip(f'Neon tx rlp error "{neon_tx.error}"')
 
@@ -304,9 +281,8 @@ class CancelWithHashIxDecoder(DummyIxDecoder):
         if not tx:
             return self._decoding_skip(f'cannot find tx in the holder {holder_account}')
 
-        # TODO: get used gas
-        gas_used = '0x0'
-        tx.neon_tx_res.fill_result(status='0x0', gas_used=gas_used, return_value='')
+        gas_used = decode_cancel_gas(self.state.sol_neon_ix.iter_log())
+        tx.neon_tx_res.fill_result(status='0x0', gas_used=hex(gas_used), return_value='')
         tx.neon_tx_res.fill_sol_sig_info(ix.sol_sig, ix.idx, ix.inner_idx)
         return self._decode_tx(tx, 'cancel Neon tx')
 
@@ -324,7 +300,7 @@ class DeleteHolderAccountIx(DummyIxDecoder):
 
 
 class WriteHolderAccountIx(DummyIxDecoder):
-    _name = 'WriteHolderAccountIx'
+    _name = 'WriteHolderAccount'
     _ix_code = 0x26
     _is_deprecated = False
 
@@ -375,10 +351,15 @@ class WriteHolderAccountIx(DummyIxDecoder):
         return True
 
 
+class Deposit3IxDecoder(DummyIxDecoder):
+    _name = 'Deposit3'
+    _ix_code = 0x27
+    _is_deprecated = False
+
+
 def get_neon_ix_decoder_list() -> List[Type[DummyIxDecoder]]:
     return [
-        CreateAccount2IxDecoder,
-        ResizeStorageAccountIxDecoder,
+        CreateAccount3IxDecoder,
         CollectTreasureIxDecoder,
         TxExecFromDataIxDecoder,
         TxStepFromDataIxDecoder,
@@ -387,5 +368,6 @@ def get_neon_ix_decoder_list() -> List[Type[DummyIxDecoder]]:
         CancelWithHashIxDecoder,
         CreateHolderAccountIx,
         DeleteHolderAccountIx,
-        WriteHolderAccountIx
+        WriteHolderAccountIx,
+        Deposit3IxDecoder,
     ]
