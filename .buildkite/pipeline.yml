@@ -16,21 +16,21 @@ steps:
     command:
       - ".buildkite/steps/full_test_suite/terraform-build.sh"
 
-  - label: ":cop::skin-tone-2: deploy check"
-    command: ".buildkite/steps/deploy-test.sh"
-    timeout: 90
-    agents:
-       queue: "testing"
-    artifact_paths:
-      - "proxy.log"
-      - "solana.log"
-      - "measurements.log"
-      - "dbcreation.log"
-      - "faucet.log"
-      - "airdropper.log"
-      - "indexer.log"
-      - "deploy_contracts.log"
-      - "proxy_program_loader.log"
+#  - label: ":cop::skin-tone-2: deploy check"
+#    command: ".buildkite/steps/deploy-test.sh"
+#    timeout: 90
+#    agents:
+#       queue: "testing"
+#    artifact_paths:
+#      - "proxy.log"
+#      - "solana.log"
+#      - "measurements.log"
+#      - "dbcreation.log"
+#      - "faucet.log"
+#      - "airdropper.log"
+#      - "indexer.log"
+#      - "deploy_contracts.log"
+#      - "proxy_program_loader.log"
 #    env:
 #      UNITTEST_TESTNAME: indexer_work
 
