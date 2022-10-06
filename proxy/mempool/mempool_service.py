@@ -1,3 +1,4 @@
+import os
 import traceback
 
 from logged_groups import logged_group, logging_context
@@ -24,7 +25,7 @@ class MPService(IPickableDataServerUser, IMPExecutorMngUser):
     MP_SERVICE_ADDR = ("0.0.0.0", 9091)
     MP_MAINTENANCE_ADDR = ("0.0.0.0", 9092)
 
-    EXECUTOR_COUNT = 8
+    EXECUTOR_COUNT = int(os.environ.get("EXECUTOR_COUNT", "8"))
 
     def __init__(self, config: Config):
         self.event_loop = asyncio.new_event_loop()
